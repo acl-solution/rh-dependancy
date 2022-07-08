@@ -3,6 +3,11 @@
     "description": "Private Dependency",
     "type": "library",
     "require": {
+        "php": ">=7.4",
+        "cache/adapter-common": "^1.0",
+        "league/flysystem": "^1.0",
+        "psr/cache": "^1.0 || ^2.0",
+        "psr/simple-cache": "^1.0",
         "ipinfo/ipinfo": "2.2.0",
         "guzzlehttp/guzzle": "^6.3||^7.0"
     },
