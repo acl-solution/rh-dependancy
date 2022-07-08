@@ -1,0 +1,22 @@
+{
+    "name": "acl-solution/rh-dependency",
+    "description": "Private Dependency",
+    "type": "library",
+    "require": {
+        "ipinfo/ipinfo": "2.2.0",
+        "guzzlehttp/guzzle": "^6.3||^7.0"
+    },
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "ACL\\RH\\Dependency\\" : "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "MD RASHEDUL ISLAM",
+            "email": "rashed.islam.370@gmail.com"
+        }
+    ]
+}
