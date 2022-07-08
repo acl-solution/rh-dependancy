@@ -212,3 +212,55 @@ The file must be a `.json` file with the following structure:
  ...
 }
 ```
+
+## Available Methods
+
+Available methods in this library:
+
+### - Get user's IP:
+
+```php
+Ip::get();
+```
+
+**# Return** (string|false) → user IP or false
+
+### - Validate IP:
+
+```php
+Ip::validate($ip);
+```
+
+| Attribute | Description | Type | Required | Default
+| --- | --- | --- | --- | --- |
+| $ip | IP address to be validated. | string | Yes | |
+
+**# Return** (boolean)
+
+## Quick Start
+
+To use this library with **Composer**:
+
+```php
+require __DIR__ . '/vendor/autoload.php';
+
+use ACL\RH\Dependency\Ip;
+```
+
+## Usage
+
+Example of use for this library:
+
+### - Get user's IP:
+
+```php
+Ip::get();
+```
+
+### - Validate IP:
+
+```php
+$ip = Ip::get();
+
+Ip::validate($ip);
+```
