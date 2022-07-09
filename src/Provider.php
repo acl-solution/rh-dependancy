@@ -45,7 +45,7 @@ class Provider
      * @param $cacheDir
      * @param int $cacheTtl
      */
-    public function __construct($url, $username, $password, $cacheDir, $cacheTtl = 7)
+    public function __construct($url, $cacheDir, $cacheTtl = 7)
     {
         $this->url = $url;
         $this->username = null;
