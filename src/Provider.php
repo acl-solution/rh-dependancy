@@ -24,6 +24,12 @@ class Provider
      */
     protected $password;
 
+    protected $identifier;
+
+    protected $secret;
+
+    protected $accesskey;
+
     /**
      * @var string The WHMCS installation url
      */
@@ -42,14 +48,34 @@ class Provider
     public function __construct($url, $username, $password, $cacheDir, $cacheTtl = 7)
     {
         $this->url = $url;
-        $this->username = $username;
-        $this->password = md5($password);
+        $this->username = null;
+        $this->password = null;
         $this->cache = new WHMCSFilesystem($cacheDir, 86400*$cacheTtl);
         $this->http = new Guzzle(['base_uri' => $url . 'includes/api.php']);
     }
 
+    public function setUser($username, $password) {
+        $this->username = $username;
+        $this->password = md5($password);
+    }
+
+    public function setIdentifier($identifier, $secret, $accesskey) {
+        $this->identifier = $identifier;
+        $this->secret = $secret;
+        $this->accesskey = $accesskey;
+    }
+
+    public function isUser() {
+        return !empty($this->username) && !empty($this->password);
+    }
+
+    public function isIdentifier() {
+        return !empty($this->identifier) && !empty($this->secret) && !empty($this->accesskey);
+    }
+
 
     /**
+     * @param $cacheToken
      * @param $action
      * @param array $params
      * @return mixed
@@ -59,27 +85,39 @@ class Provider
      */
     public function sendRequest($cacheToken, $action, $params = [])
     {
-        try {
-            $response = $this->http->post('', [
-                'form_params' => array_merge($params, [
-                    'username' => $this->username,
-                    'password' => $this->password,
-                    'action' => $action,
-                    'responsetype' => 'json',
-                ]),
-            ]);
-        } catch (ClientException $e) {
-            throw new RequestException($e->getResponse());
+        $authorization = [];
+
+        if($this->isUser()) {
+            $authorization['username'] = $this->username;
+            $authorization['password'] = $this->password;
+        } elseif ($this->isIdentifier()) {
+            $authorization['identifier'] = $this->identifier;
+            $authorization['secret'] = $this->secret;
+            $authorization['accesskey'] = $this->accesskey;
         }
 
-        $data = json_decode($response->getBody(), true);
+        if(!empty($authorization)) {
+            try {
+                $response = $this->http->post('', [
+                    'form_params' => array_merge($params, $authorization, [
+                        'action' => $action,
+                        'responsetype' => 'json',
+                    ]),
+                ]);
+            } catch (ClientException $e) {
+                throw new RequestException($e->getResponse());
+            }
 
-        if (isset($data['result']) && $data['result'] === 'success') {
-            $this->cache->set($cacheToken, $data);
-            return $data;
-        } else {
-            throw new ResponseException($response);
+            $data = json_decode($response->getBody(), true);
+
+            if (isset($data['result']) && $data['result'] === 'success') {
+                $this->cache->set($cacheToken, $data);
+                return $data;
+            } else {
+                throw new ResponseException($response);
+            }
         }
+        return null;
     }
 
     /**
