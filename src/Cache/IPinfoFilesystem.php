@@ -28,6 +28,14 @@ class IPinfoFilesystem implements CacheInterface {
 
     }
 
+    private function sanitize( $filename ) {
+        $special_chars = array("?", "[", "]", "/", "", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}");
+        $filename = str_replace($special_chars, '', $filename);
+        $filename = preg_replace('/[s-]+/', '-', $filename);
+        $filename = trim($filename, '.-_');
+        return $filename;
+    }
+
     /**
      * @param string $path
      */
@@ -43,6 +51,7 @@ class IPinfoFilesystem implements CacheInterface {
      */
     public function has(string $name)
     {
+        $name = $this->sanitize($name);
         try {
             return $this->cache->has($name);
         } catch (InvalidArgumentException $e) {
@@ -58,6 +67,7 @@ class IPinfoFilesystem implements CacheInterface {
      */
     public function set(string $name, $value)
     {
+        $name = $this->sanitize($name);
         try {
 
             $this->cache->set($name, $value, $this->ttl);
@@ -73,6 +83,7 @@ class IPinfoFilesystem implements CacheInterface {
      */
     public function get(string $name)
     {
+        $name = $this->sanitize($name);
         try {
             return $this->cache->get($name);
         } catch (InvalidArgumentException $e) {
