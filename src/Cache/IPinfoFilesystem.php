@@ -23,7 +23,7 @@ class IPinfoFilesystem implements CacheInterface {
         $this->path = $path;
         $adapter = new Local($path);
         $filesystem = new \League\Flysystem\Filesystem($adapter);
-        $this->cache = new Filesystem($filesystem);
+        $this->cache = new Filesystem($filesystem, 'cache/ipinfo');
         $this->ttl = $ttl;
 
     }
@@ -89,5 +89,31 @@ class IPinfoFilesystem implements CacheInterface {
         } catch (InvalidArgumentException $e) {
             return null;
         }
+    }
+
+    /**
+     * Delete an item from the cache by its unique key.
+     *
+     * @param string $key The unique cache key of the item to delete.
+     *
+     * @return bool True if the item was successfully removed. False if there was an error.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function delete($key)
+    {
+        $key = $this->sanitize($key);
+        return $this->cache->delete($key);
+    }
+
+    /**
+     * Wipes clean the entire cache's keys.
+     *
+     * @return bool True on success and false on failure.
+     */
+    public function clear()
+    {
+        return $this->cache->clear();
     }
 }

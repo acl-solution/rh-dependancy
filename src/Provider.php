@@ -1,6 +1,7 @@
 <?php
 namespace ACL\RH\Dependency;
 
+use ACL\RH\Dependency\Cache\WHMCSFilesystem;
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
 use ACL\RH\Dependency\Exceptions\RequestException;
@@ -28,18 +29,22 @@ class Provider
      */
     protected $url;
 
+    protected $cache;
+
     /**
      * Api constructor.
      * @param string $url The WHMCS installation URL
      * @param string $username The WHMCS API username
      * @param string $password The WHMCS API password
+     * @param $cacheDir
+     * @param int $cacheTtl
      */
-    public function __construct($url, $username, $password)
+    public function __construct($url, $username, $password, $cacheDir, $cacheTtl = 7)
     {
         $this->url = $url;
         $this->username = $username;
         $this->password = md5($password);
-
+        $this->cache = new WHMCSFilesystem($cacheDir, 86400*$cacheTtl);
         $this->http = new Guzzle(['base_uri' => $url . 'includes/api.php']);
     }
 
@@ -52,7 +57,7 @@ class Provider
      * @throws ResponseException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function sendRequest($action, $params = [])
+    public function sendRequest($cacheToken, $action, $params = [])
     {
         try {
             $response = $this->http->post('', [
@@ -70,6 +75,7 @@ class Provider
         $data = json_decode($response->getBody(), true);
 
         if (isset($data['result']) && $data['result'] === 'success') {
+            $this->cache->set($cacheToken, $data);
             return $data;
         } else {
             throw new ResponseException($response);
@@ -83,11 +89,16 @@ class Provider
      * @throws RequestException
      * @throws ResponseException
      * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function __call($name, $arguments)
     {
         $params = isset($arguments[0]) && is_array($arguments[0]) ? $arguments[0] : [];
+        $cacheToken = $this->generateCacheToken($name, $params);
+        return $this->cache->has($cacheToken)? $this->cache->get($cacheToken) : $this->sendRequest($cacheToken, ucfirst($name), $params);
+    }
 
-        return $this->sendRequest(ucfirst($name), $params);
+    private function generateCacheToken($method, $params) {
+        return sprintf("%s-%s", strtolower($method), md5(serialize($params)));
     }
 }
