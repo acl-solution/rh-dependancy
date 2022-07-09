@@ -137,6 +137,6 @@ class Provider
     }
 
     private function generateCacheToken($method, $params) {
-        return sprintf("%s-%s", strtolower($method), md5(serialize($params)));
+        return sprintf("%s.%s", strtolower($method), md5(serialize($params)));
     }
 }
