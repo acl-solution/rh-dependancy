@@ -41,6 +41,7 @@ class Filesystem extends AbstractCachePool
     public function setFolder($folder)
     {
         $this->folder = $folder;
+        $this->filesystem->createDir($this->folder);
     }
 
     /**
