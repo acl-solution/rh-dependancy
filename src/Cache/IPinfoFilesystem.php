@@ -31,7 +31,7 @@ class IPinfoFilesystem implements CacheInterface {
     private function sanitize( $filename ) {
         $special_chars = array("?", "[", "]", "/", "", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", "-");
         $filename = str_replace($special_chars, '', $filename);
-        $filename = preg_replace('/[s-]+/', '-', $filename);
+        $filename = preg_replace('/\s+/', '_', $filename);
         $filename = trim($filename, '.-_');
         return $filename;
     }
