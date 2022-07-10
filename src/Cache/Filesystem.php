@@ -5,6 +5,7 @@ namespace ACL\RH\Dependency\Cache;
 use Cache\Adapter\Common\AbstractCachePool;
 use Cache\Adapter\Common\Exception\InvalidArgumentException;
 use Cache\Adapter\Common\PhpCacheItem;
+use League\Flysystem\Config;
 use League\Flysystem\FileExistsException;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\FilesystemInterface;
@@ -23,6 +24,8 @@ class Filesystem extends AbstractCachePool
      */
     private $folder;
 
+    private $visibility;
+
     /**
      * @param FilesystemInterface $filesystem
      * @param string              $folder
@@ -30,9 +33,9 @@ class Filesystem extends AbstractCachePool
     public function __construct(FilesystemInterface $filesystem, $folder = 'cache')
     {
         $this->folder = $folder;
-
+        $this->visibility = new Config(['visibility' => 'private']);
         $this->filesystem = $filesystem;
-        $this->filesystem->createDir($this->folder);
+        $this->filesystem->createDir($this->folder, $this->visibility);
     }
 
     /**
@@ -41,7 +44,7 @@ class Filesystem extends AbstractCachePool
     public function setFolder($folder)
     {
         $this->folder = $folder;
-        $this->filesystem->createDir($this->folder);
+        $this->filesystem->createDir($this->folder, $this->visibility);
     }
 
     /**
@@ -81,7 +84,7 @@ class Filesystem extends AbstractCachePool
     protected function clearAllObjectsFromCache()
     {
         $this->filesystem->deleteDir($this->folder);
-        $this->filesystem->createDir($this->folder);
+        $this->filesystem->createDir($this->folder, $this->visibility);
 
         return true;
     }
@@ -110,14 +113,14 @@ class Filesystem extends AbstractCachePool
         $file = $this->getFilePath($item->getKey());
         if ($this->filesystem->has($file)) {
             // Update file if it exists
-            return $this->filesystem->update($file, $data);
+            return $this->filesystem->update($file, $data, $this->visibility);
         }
 
         try {
-            return $this->filesystem->write($file, $data);
+            return $this->filesystem->write($file, $data, $this->visibility);
         } catch (FileExistsException $e) {
             // To handle issues when/if race conditions occurs, we try to update here.
-            return $this->filesystem->update($file, $data);
+            return $this->filesystem->update($file, $data, $this->visibility);
         }
     }
 
@@ -145,7 +148,7 @@ class Filesystem extends AbstractCachePool
         $file = $this->getFilePath($name);
 
         if (!$this->filesystem->has($file)) {
-            $this->filesystem->write($file, serialize([]));
+            $this->filesystem->write($file, serialize([]), $this->visibility);
         }
 
         return unserialize($this->filesystem->read($file));
@@ -168,7 +171,7 @@ class Filesystem extends AbstractCachePool
         $list   = $this->getList($name);
         $list[] = $key;
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        return $this->filesystem->update($this->getFilePath($name), serialize($list), $this->visibility);
     }
 
     /**
@@ -183,7 +186,7 @@ class Filesystem extends AbstractCachePool
             }
         }
 
-        return $this->filesystem->update($this->getFilePath($name), serialize($list));
+        return $this->filesystem->update($this->getFilePath($name), serialize($list), $this->visibility);
     }
 
     /**
