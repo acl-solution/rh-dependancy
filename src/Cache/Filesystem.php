@@ -33,7 +33,7 @@ class Filesystem extends AbstractCachePool
     public function __construct(FilesystemInterface $filesystem, $folder = 'cache')
     {
         $this->folder = $folder;
-        $this->visibility = new Config(['visibility' => 'private']);
+        $this->visibility = ['visibility' => 'private'];
         $this->filesystem = $filesystem;
         $this->filesystem->createDir($this->folder, $this->visibility);
     }
